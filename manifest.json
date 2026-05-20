@@ -1,0 +1,21 @@
+{
+  "name": "Portfolio.US",
+  "short_name": "Portfolio",
+  "description": "미국 주식 포트폴리오 트래커",
+  "start_url": "/port/",
+  "scope": "/port/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f7f4ef",
+  "theme_color": "#2c4a6e",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "productivity"]
+}
