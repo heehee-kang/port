@@ -1887,7 +1887,6 @@ function renderOverview(){
 }
 
 // ════ CASH (통장 방식) ════
-let cashLedger = JSON.parse(localStorage.getItem('cash_ledger')||'[]');
 // cashLedger 항목: {id, date, currency, type:'in'|'out', amount, memo, auto:bool}
 
 function getCashBalances(){
