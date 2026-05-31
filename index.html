@@ -100,41 +100,6 @@
     border-top: 1px solid var(--border2);
     padding-top: 20px;
   }
-
-  /* ── DRIVE SYNC ── */
-  .sync-pill {
-    background: var(--sage-ll);
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 11px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-  }
-  .sync-status-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--text3);
-    flex-shrink: 0;
-    transition: background 0.3s;
-  }
-  .sync-status-dot.synced  { background: var(--green); }
-  .sync-status-dot.saving  { background: var(--warm); animation: pulse 1s infinite; }
-  .sync-status-dot.error   { background: var(--red); }
-  .sync-label { color: var(--text2); flex: 1; font-size: 11px; }
-  .sync-btn-row { display: flex; gap: 5px; margin-bottom: 8px; }
-  .sync-btn {
-    flex: 1; font-size: 11px; padding: 5px 0;
-    border-radius: 6px; cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    border: 1px solid var(--border); background: #fff;
-    color: var(--text2); transition: all 0.15s; text-align: center;
-  }
-  .sync-btn:hover { border-color: var(--sage); color: var(--sage-d); }
-  .sync-btn.primary { background: var(--sage-d); color: #fff; border-color: var(--sage-d); }
-  .sync-btn.primary:hover { background: var(--sage); }
   .exchange-pill {
     background: var(--warm-l);
     border-radius: 8px;
@@ -480,23 +445,6 @@
   </div>
 
   <div class="sb-bottom">
-
-    <!-- ── Google Drive 동기화 ── -->
-    <div style="margin-bottom:12px">
-      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">
-        ☁️ Google Drive 동기화
-      </div>
-      <div class="sync-pill">
-        <div class="sync-status-dot" id="sync-dot"></div>
-        <span class="sync-label" id="sync-label">대기 중</span>
-      </div>
-      <div class="sync-btn-row">
-        <button class="sync-btn primary" onclick="driveSave(true)">📤 저장</button>
-        <button class="sync-btn" onclick="driveLoad(true)">📥 불러오기</button>
-      </div>
-      <div style="font-size:10px;color:var(--text3);text-align:center" id="sync-time">--</div>
-    </div>
-
     <div style="margin-bottom:10px">
       <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px">
         Finnhub API Key <span style="color:var(--text3);font-size:9px">(선택)</span>
@@ -738,136 +686,55 @@
     <div class="page-header">
       <div>
         <div class="page-title">현금 관리</div>
-        <div class="page-sub">통장 방식 입출금 이력 · 매수/매도 자동 연동</div>
+        <div class="page-sub">통화별 보유 현금 및 이자율 입력</div>
       </div>
     </div>
 
-    <!-- 잔액 요약 카드 -->
-    <div class="summary-grid" style="margin-bottom:24px">
-      <div class="scard">
-        <div class="scard-accent" style="background:var(--sage)"></div>
-        <div class="scard-label">🇺🇸 USD 잔액</div>
-        <div class="scard-value" id="cash-bal-usd">$0.00</div>
-        <div class="scard-sub" id="cash-bal-usd-krw">≈ ₩0</div>
+    <div class="cash-grid">
+      <div class="cash-entry-card">
+        <div class="cash-currency">🇺🇸 USD 현금</div>
+        <input class="cash-amount-input" type="number" id="cash-usd" placeholder="0" min="0" step="100"
+          oninput="saveCash();renderCash();renderOverview()">
+        <div class="cash-label">보유 금액 (USD)</div>
+        <input class="interest-input" type="number" id="int-usd" placeholder="0.00" min="0" max="100" step="0.01"
+          oninput="saveCash()">
+        <div class="cash-label">이자율 (% / 연)</div>
       </div>
-      <div class="scard">
-        <div class="scard-accent" style="background:var(--warm)"></div>
-        <div class="scard-label">🇰🇷 KRW 잔액</div>
-        <div class="scard-value" id="cash-bal-krw">₩0</div>
-        <div class="scard-sub" id="cash-bal-krw-sub">보조 현금</div>
+      <div class="cash-entry-card">
+        <div class="cash-currency">🇰🇷 KRW 현금</div>
+        <input class="cash-amount-input" type="number" id="cash-krw" placeholder="0" min="0" step="100000"
+          oninput="saveCash();renderCash();renderOverview()">
+        <div class="cash-label">보유 금액 (KRW)</div>
+        <input class="interest-input" type="number" id="int-krw" placeholder="0.00" min="0" max="100" step="0.01"
+          oninput="saveCash()">
+        <div class="cash-label">이자율 (% / 연)</div>
       </div>
-      <div class="scard">
-        <div class="scard-accent" style="background:#8b7355"></div>
-        <div class="scard-label">💴 기타 잔액 (KRW환산)</div>
-        <div class="scard-value" id="cash-bal-other">₩0</div>
-        <div class="scard-sub" id="cash-bal-other-sub">기타 통화</div>
-      </div>
-      <div class="scard">
-        <div class="scard-accent" style="background:#4f7560"></div>
-        <div class="scard-label">총 현금 (KRW)</div>
-        <div class="scard-value" id="cash-bal-total">₩0</div>
-        <div class="scard-sub" id="cash-bal-total-sub">전체 합산</div>
-      </div>
-    </div>
-
-    <!-- 이자율 설정 -->
-    <div class="table-card" style="margin-bottom:20px">
-      <div class="table-toolbar"><span class="toolbar-title">이자율 설정</span></div>
-      <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
-        <div>
-          <label class="form-label">USD 이자율 (% / 연)</label>
-          <input class="form-input" type="number" id="int-usd" placeholder="0.00" min="0" max="100" step="0.01" oninput="saveCash();renderCash();renderOverview()">
-        </div>
-        <div>
-          <label class="form-label">KRW 이자율 (% / 연)</label>
-          <input class="form-input" type="number" id="int-krw" placeholder="0.00" min="0" max="100" step="0.01" oninput="saveCash();renderCash();renderOverview()">
-        </div>
-        <div>
-          <label class="form-label">기타 이자율 (% / 연)</label>
-          <input class="form-input" type="number" id="int-other" placeholder="0.00" min="0" max="100" step="0.01" oninput="saveCash();renderCash();renderOverview()">
-        </div>
+      <div class="cash-entry-card">
+        <div class="cash-currency">💴 기타 통화</div>
+        <input class="cash-amount-input" type="number" id="cash-other-krw" placeholder="0" min="0" step="100000"
+          oninput="saveCash();renderCash();renderOverview()">
+        <div class="cash-label">KRW 환산 금액</div>
+        <input class="interest-input" type="number" id="int-other" placeholder="0.00" min="0" max="100" step="0.01"
+          oninput="saveCash()">
+        <div class="cash-label">이자율 (% / 연)</div>
       </div>
     </div>
 
-    <!-- 수동 입출금 입력 -->
-    <div class="table-card" style="margin-bottom:20px">
-      <div class="table-toolbar"><span class="toolbar-title">입출금 입력</span></div>
-      <div style="padding:16px 20px">
-        <div style="display:grid;grid-template-columns:120px 120px 1fr 130px;gap:12px;align-items:end">
-          <div>
-            <label class="form-label">날짜</label>
-            <input class="form-input" type="date" id="cash-input-date">
-          </div>
-          <div>
-            <label class="form-label">통화</label>
-            <select class="form-input" id="cash-input-currency" style="cursor:pointer">
-              <option value="usd">🇺🇸 USD</option>
-              <option value="krw">🇰🇷 KRW</option>
-              <option value="other">💴 기타</option>
-            </select>
-          </div>
-          <div>
-            <label class="form-label">메모</label>
-            <input class="form-input" type="text" id="cash-input-memo" placeholder="예) 급여 이체, 생활비...">
-          </div>
-          <div>
-            <label class="form-label">금액</label>
-            <input class="form-input" type="number" id="cash-input-amount" placeholder="0.00" min="0" step="0.01">
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <button class="btn btn-primary" onclick="cashAddTx('in')" style="background:var(--green)">+ 입금</button>
-          <button class="btn btn-primary" onclick="cashAddTx('out')" style="background:var(--red)">- 출금</button>
-          <button class="btn btn-ghost" onclick="resetCashInputs()">초기화</button>
-          <div id="cash-input-err" style="font-size:12px;color:var(--red);align-self:center;margin-left:8px"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 거래 이력 -->
     <div class="table-card">
-      <div class="table-toolbar">
-        <span class="toolbar-title">거래 이력</span>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="cash-search" placeholder="🔍 검색 (메모·날짜·통화)" 
-            style="background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);width:220px"
-            oninput="renderCashLedger()">
-          <select id="cash-filter-type" style="background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);cursor:pointer" onchange="renderCashLedger()">
-            <option value="">전체</option>
-            <option value="in">입금만</option>
-            <option value="out">출금만</option>
-          </select>
-          <select id="cash-filter-currency" style="background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);cursor:pointer" onchange="renderCashLedger()">
-            <option value="">전체 통화</option>
-            <option value="usd">USD</option>
-            <option value="krw">KRW</option>
-            <option value="other">기타</option>
-          </select>
-          <button class="btn btn-ghost btn-sm" onclick="clearCashHistory()" style="color:var(--red);border-color:var(--red);font-size:11px">전체 삭제</button>
-        </div>
-      </div>
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th style="text-align:left">날짜</th>
-              <th style="text-align:left">메모</th>
-              <th>통화</th>
-              <th>구분</th>
-              <th>금액</th>
-              <th>USD 잔액</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="cash-ledger-tbody"></tbody>
-        </table>
-      </div>
+      <div class="table-toolbar"><span class="toolbar-title">현금 요약</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align:left">통화</th>
+            <th>보유금액</th>
+            <th>KRW 환산</th>
+            <th>이자율</th>
+            <th>연 예상이자 (KRW)</th>
+          </tr>
+        </thead>
+        <tbody id="cash-tbody"></tbody>
+      </table>
     </div>
-
-    <!-- 숨김 호환성 input (renderOverview 등에서 참조) -->
-    <input type="hidden" id="cash-usd" value="0">
-    <input type="hidden" id="cash-krw" value="0">
-    <input type="hidden" id="cash-other-krw" value="0">
   </div>
 
   <!-- ─ DIVIDEND PAGE ─ -->
@@ -941,7 +808,7 @@
     <div class="table-card" style="margin-bottom:20px">
       <div class="table-toolbar"><span class="toolbar-title">종목 선택</span></div>
       <div style="padding:20px 24px">
-        <div style="display:grid;grid-template-columns:160px 1fr 1fr 1fr;gap:16px;align-items:end">
+        <div style="display:grid;grid-template-columns:160px 1fr 1fr;gap:16px;align-items:end">
           <div>
             <label class="form-label">티커 심볼</label>
             <input class="form-input" id="trade-ticker" placeholder="AAPL" style="text-transform:uppercase"
@@ -954,30 +821,6 @@
           <div>
             <label class="form-label">현재가 (USD)</label>
             <input class="form-input" id="trade-curprice" placeholder="—" readonly>
-          </div>
-          <div>
-            <label class="form-label">섹터</label>
-            <select class="form-input" id="trade-sector" style="cursor:pointer">
-              <option value="">— 자동 감지 —</option>
-              <option value="AI·클라우드">AI·클라우드</option>
-              <option value="소프트웨어">소프트웨어</option>
-              <option value="퀀텀컴퓨팅">퀀텀컴퓨팅</option>
-              <option value="반도체·하드웨어">반도체·하드웨어</option>
-              <option value="광통신·포토닉스">광통신·포토닉스</option>
-              <option value="사이버보안">사이버보안</option>
-              <option value="전기차·자율주행">전기차·자율주행</option>
-              <option value="바이오테크">바이오테크</option>
-              <option value="헬스케어·의료기기">헬스케어·의료기기</option>
-              <option value="배당·인컴">배당·인컴</option>
-              <option value="ETF·인덱스">ETF·인덱스</option>
-              <option value="에너지·친환경">에너지·친환경</option>
-              <option value="금융·핀테크">금융·핀테크</option>
-              <option value="소비재·유통">소비재·유통</option>
-              <option value="통신·미디어">통신·미디어</option>
-              <option value="산업재·인프라">산업재·인프라</option>
-              <option value="부동산·리츠">부동산·리츠</option>
-              <option value="Other">기타</option>
-            </select>
           </div>
         </div>
         <div style="margin-top:12px">
@@ -1410,7 +1253,6 @@ const DIV_MONTHS={AAPL:[3,6,9,12],MSFT:[3,6,9,12],JNJ:[3,6,9,12],KO:[4,7,10,1],P
 
 let portfolio = JSON.parse(localStorage.getItem('pf_nat2')||'null')||[];
 let cashData = JSON.parse(localStorage.getItem('cash_nat2')||'null')||{usd:0,krw:0,other:0,intUsd:0,intKrw:0,intOther:0};
-let cashLedger = JSON.parse(localStorage.getItem('cash_ledger')||'[]');
 let priceData = {};
 
 function simP(t){return +(((SIM_P[t]||100)*(1+(Math.random()-0.5)*0.002)).toFixed(2));}
@@ -1886,218 +1728,48 @@ function renderOverview(){
     tooltip:{callbacks:{label:c=>{const t=c.dataset.data.reduce((a,b)=>a+b,0);return' '+(c.raw/t*100).toFixed(1)+'%';}}}}}});
 }
 
-// ════ CASH (통장 방식) ════
-// cashLedger 항목: {id, date, currency, type:'in'|'out', amount, memo, auto:bool}
-
-function getCashBalances(){
-  const bal = {usd:0, krw:0, other:0};
-  cashLedger.forEach(tx=>{
-    const sign = tx.type==='in' ? 1 : -1;
-    bal[tx.currency] = (bal[tx.currency]||0) + sign * tx.amount;
-  });
-  return bal;
-}
-
+// ════ CASH ════
 function getCashTotalKRW(){
-  const b = getCashBalances();
-  const intUsd = parseFloat(document.getElementById('int-usd')?.value||cashData.intUsd||0);
-  const intKrw = parseFloat(document.getElementById('int-krw')?.value||cashData.intKrw||0);
-  const intOther = parseFloat(document.getElementById('int-other')?.value||cashData.intOther||0);
-  return b.usd*usdkrw + b.krw + b.other;
+  // 항상 저장된 cashData 기준으로 계산 (DOM 입력창이 없어도 정확히 동작)
+  return (cashData.usd||0)*usdkrw + (cashData.krw||0) + (cashData.other||0);
 }
-
 function getCashValues(){
-  const b = getCashBalances();
-  return {
-    usd: b.usd, krw: b.krw, other: b.other,
-    intUsd:  parseFloat(document.getElementById('int-usd')?.value||cashData.intUsd||0),
-    intKrw:  parseFloat(document.getElementById('int-krw')?.value||cashData.intKrw||0),
-    intOther:parseFloat(document.getElementById('int-other')?.value||cashData.intOther||0),
+  const v=id=>{ const el=document.getElementById(id); if(!el) return null; const s=el.value; return s===''?null:parseFloat(s); };
+  return{
+    usd:    v('cash-usd')    ??cashData.usd   ??0,
+    krw:    v('cash-krw')    ??cashData.krw   ??0,
+    other:  v('cash-other-krw')??cashData.other??0,
+    intUsd: v('int-usd')    ??cashData.intUsd??0,
+    intKrw: v('int-krw')    ??cashData.intKrw??0,
+    intOther:v('int-other') ??cashData.intOther??0,
   };
 }
-
 function saveCash(){
-  cashData = getCashValues();
-  localStorage.setItem('cash_nat2', JSON.stringify(cashData));
-  localStorage.setItem('cash_ledger', JSON.stringify(cashLedger));
-  markDirty();
+  cashData=getCashValues();
+  localStorage.setItem('cash_nat2',JSON.stringify(cashData));
 }
-
-function saveCashLedger(){
-  localStorage.setItem('cash_ledger', JSON.stringify(cashLedger));
-  markDirty();
-}
-
 function loadCashInputs(){
-  const el = id => document.getElementById(id);
-  if(el('int-usd'))   el('int-usd').value   = cashData.intUsd   || '';
-  if(el('int-krw'))   el('int-krw').value   = cashData.intKrw   || '';
-  if(el('int-other')) el('int-other').value  = cashData.intOther || '';
-  // 오늘 날짜 기본값
-  const today = new Date().toISOString().slice(0,10);
-  if(el('cash-input-date')) el('cash-input-date').value = today;
+  document.getElementById('cash-usd').value = cashData.usd ?? '';
+  document.getElementById('cash-krw').value = cashData.krw ?? '';
+  document.getElementById('cash-other-krw').value = cashData.other ?? '';
+  document.getElementById('int-usd').value = cashData.intUsd || '';
+  document.getElementById('int-krw').value = cashData.intKrw || '';
+  document.getElementById('int-other').value = cashData.intOther || '';
 }
-
-// ── 입출금 추가 ──
-function cashAddTx(type){
-  const errEl = document.getElementById('cash-input-err');
-  const date   = document.getElementById('cash-input-date').value || new Date().toISOString().slice(0,10);
-  const currency = document.getElementById('cash-input-currency').value || 'usd';
-  const memo   = document.getElementById('cash-input-memo').value.trim() || (type==='in'?'입금':'출금');
-  const amount = parseFloat(document.getElementById('cash-input-amount').value);
-  if(!amount || amount <= 0){ errEl.textContent='금액을 입력하세요'; return; }
-  errEl.textContent='';
-  cashLedger.push({ id: Date.now(), date, currency, type, amount, memo, auto: false });
-  cashLedger.sort((a,b)=>b.date.localeCompare(a.date));
-  saveCashLedger();
-  saveCash();
-  resetCashInputs();
-  renderCash();
-  renderOverview();
-}
-
-// ── 거래 삭제 ──
-async function deleteCashTx(id){
-  const ok = await customConfirm('이 거래 내역을 삭제하시겠습니까?', '삭제', true);
-  if(!ok) return;
-  cashLedger = cashLedger.filter(tx => tx.id !== id);
-  saveCashLedger();
-  saveCash();
-  renderCash();
-  renderOverview();
-}
-
-// ── 전체 삭제 ──
-async function clearCashHistory(){
-  const ok = await customConfirm('거래 이력을 전체 삭제하시겠습니까?', '삭제', true);
-  if(!ok) return;
-  cashLedger = [];
-  saveCashLedger();
-  saveCash();
-  renderCash();
-  renderOverview();
-}
-
-// ── 매수 시 현금 자동 차감 ──
-function cashAutoOut(ticker, amount, date){
-  if(amount <= 0) return;
-  cashLedger.push({ id: Date.now(), date: date||new Date().toISOString().slice(0,10), currency:'usd', type:'out', amount, memo: ticker+' 매수', auto: true });
-  cashLedger.sort((a,b)=>b.date.localeCompare(a.date));
-  saveCashLedger();
-}
-
-// ── 매도 시 현금 자동 추가 ──
-function cashAutoIn(ticker, amount, date){
-  if(amount <= 0) return;
-  cashLedger.push({ id: Date.now(), date: date||new Date().toISOString().slice(0,10), currency:'usd', type:'in', amount, memo: ticker+' 매도', auto: true });
-  cashLedger.sort((a,b)=>b.date.localeCompare(a.date));
-  saveCashLedger();
-}
-
-// ── 입력창 초기화 ──
-function resetCashInputs(){
-  document.getElementById('cash-input-memo').value = '';
-  document.getElementById('cash-input-amount').value = '';
-  document.getElementById('cash-input-err').textContent = '';
-}
-
-// ── 렌더링 ──
 function renderCash(){
-  const b = getCashBalances();
-  const intUsd   = parseFloat(document.getElementById('int-usd')?.value||cashData.intUsd||0);
-  const intKrw   = parseFloat(document.getElementById('int-krw')?.value||cashData.intKrw||0);
-  const intOther = parseFloat(document.getElementById('int-other')?.value||cashData.intOther||0);
-  const totalKRW = b.usd*usdkrw + b.krw + b.other;
-
-  // 잔액 카드
-  const el = id => document.getElementById(id);
-  if(el('cash-bal-usd'))       el('cash-bal-usd').textContent = '$'+b.usd.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  if(el('cash-bal-usd-krw'))   el('cash-bal-usd-krw').textContent = '≈ ₩'+Math.round(b.usd*usdkrw).toLocaleString('ko-KR');
-  if(el('cash-bal-krw'))       el('cash-bal-krw').textContent = '₩'+Math.round(b.krw).toLocaleString('ko-KR');
-  if(el('cash-bal-krw-sub'))   el('cash-bal-krw-sub').textContent = intKrw?'이자 '+intKrw.toFixed(2)+'%':'이자 미설정';
-  if(el('cash-bal-other'))     el('cash-bal-other').textContent = '₩'+Math.round(b.other).toLocaleString('ko-KR');
-  if(el('cash-bal-other-sub')) el('cash-bal-other-sub').textContent = intOther?'이자 '+intOther.toFixed(2)+'%':'이자 미설정';
-  if(el('cash-bal-total'))     el('cash-bal-total').textContent = '₩'+Math.round(totalKRW).toLocaleString('ko-KR');
-  if(el('cash-bal-total-sub')){
-    const annInt = b.usd*usdkrw*(intUsd/100) + b.krw*(intKrw/100) + b.other*(intOther/100);
-    el('cash-bal-total-sub').textContent = annInt > 0 ? '연 이자 ₩'+Math.round(annInt).toLocaleString('ko-KR') : '이자 미설정';
-  }
-
-  // hidden 호환 inputs 동기화
-  if(el('cash-usd'))       el('cash-usd').value = b.usd;
-  if(el('cash-krw'))       el('cash-krw').value = b.krw;
-  if(el('cash-other-krw')) el('cash-other-krw').value = b.other;
-
-  renderCashLedger();
-}
-
-function renderCashLedger(){
-  const tbody = document.getElementById('cash-ledger-tbody');
-  if(!tbody) return;
-
-  const searchQ  = (document.getElementById('cash-search')?.value||'').toLowerCase();
-  const typeFilter = document.getElementById('cash-filter-type')?.value||'';
-  const currFilter = document.getElementById('cash-filter-currency')?.value||'';
-
-  let filtered = [...cashLedger];
-  if(typeFilter) filtered = filtered.filter(tx=>tx.type===typeFilter);
-  if(currFilter) filtered = filtered.filter(tx=>tx.currency===currFilter);
-  if(searchQ)    filtered = filtered.filter(tx=>(tx.memo||'').toLowerCase().includes(searchQ)||(tx.date||'').includes(searchQ)||(tx.currency||'').includes(searchQ));
-
-  if(!filtered.length){
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">거래 내역이 없습니다</td></tr>';
-    return;
-  }
-
-  // 잔액 누적 (최신순 정렬 상태에서 역산)
-  const sorted = [...cashLedger].sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
-  let runBal = {};
-  sorted.forEach(tx=>{ runBal[tx.id] = getCashBalances(); });
-  // 실제 잔액은 각 거래 시점까지 누적
-  const balMap = {};
-  const asc = [...cashLedger].sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
-  let bal = {usd:0, krw:0, other:0};
-  asc.forEach(tx=>{
-    const sign = tx.type==='in' ? 1 : -1;
-    bal[tx.currency] = (bal[tx.currency]||0) + sign * tx.amount;
-    balMap[tx.id] = {...bal};
-  });
-
-  const currLabel = c => c==='usd'?'🇺🇸 USD':c==='krw'?'🇰🇷 KRW':'💴 기타';
-  const fmtAmt = (tx) => {
-    const prefix = tx.type==='in' ? '+' : '-';
-    const color  = tx.type==='in' ? 'var(--green)' : 'var(--red)';
-    const sym    = tx.currency==='usd'?'$':tx.currency==='krw'?'₩':'₩';
-    const val    = tx.currency==='usd'? tx.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : Math.round(tx.amount).toLocaleString('ko-KR');
-    return `<span style="color:${color};font-weight:500">${prefix}${sym}${val}</span>`;
-  };
-  const fmtBal = (id, currency) => {
-    const b = balMap[id];
-    if(!b) return '—';
-    if(currency==='usd') return '$'+b.usd.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-    if(currency==='krw') return '₩'+Math.round(b.krw).toLocaleString('ko-KR');
-    return '₩'+Math.round(b.other).toLocaleString('ko-KR');
-  };
-
-  tbody.innerHTML = filtered.map(tx=>`
-    <tr style="border-bottom:1px solid var(--border2)${tx.auto?';background:var(--cream2)':''}">
-      <td style="padding:11px 16px;font-size:12px;color:var(--text2)">${tx.date||'—'}</td>
-      <td style="padding:11px 16px;font-size:13px">
-        ${tx.memo||'—'}
-        ${tx.auto?'<span style="font-size:10px;color:var(--text3);margin-left:4px">(자동)</span>':''}
-      </td>
-      <td style="padding:11px 16px;text-align:center"><span class="sector-badge">${currLabel(tx.currency)}</span></td>
-      <td style="padding:11px 16px;text-align:center">
-        <span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:4px;
-          background:${tx.type==='in'?'var(--green-l)':'var(--red-l)'};
-          color:${tx.type==='in'?'var(--green)':'var(--red)'}">
-          ${tx.type==='in'?'입금':'출금'}
-        </span>
-      </td>
-      <td style="padding:11px 16px;text-align:right">${fmtAmt(tx)}</td>
-      <td style="padding:11px 16px;text-align:right;font-size:12px;color:var(--text2)">${fmtBal(tx.id, tx.currency)}</td>
-      <td style="padding:11px 8px;text-align:center"><button class="btn-del" onclick="deleteCashTx(${tx.id})">✕</button></td>
-    </tr>`).join('');
+  const c=getCashValues();
+  const rows=[
+    {label:'🇺🇸 USD',amount:'$'+c.usd.toLocaleString('en-US'),krw:Math.round(c.usd*usdkrw),int:c.intUsd,intKrw:Math.round(c.usd*usdkrw*(c.intUsd/100))},
+    {label:'🇰🇷 KRW',amount:'₩'+c.krw.toLocaleString('ko-KR'),krw:c.krw,int:c.intKrw,intKrw:Math.round(c.krw*(c.intKrw/100))},
+    {label:'💴 기타',amount:'₩'+c.other.toLocaleString('ko-KR'),krw:c.other,int:c.intOther,intKrw:Math.round(c.other*(c.intOther/100))},
+  ];
+  document.getElementById('cash-tbody').innerHTML=rows.map(r=>`<tr>
+    <td><span class="sector-badge cash-badge">${r.label}</span></td>
+    <td>${r.amount}</td>
+    <td>₩${r.krw.toLocaleString('ko-KR')}</td>
+    <td>${r.int?r.int.toFixed(2)+'%':'—'}</td>
+    <td>${r.int?'₩'+r.intKrw.toLocaleString('ko-KR'):'—'}</td>
+  </tr>`).join('');
 }
 
 // ════ DIVIDEND ════
@@ -2178,7 +1850,7 @@ function renderSector(){
 // ════ PORTFOLIO CRUD ════
 function upd(i,f,v){portfolio[i][f]=parseFloat(v)||0;save();renderAll();}
 async function rmv(i){const ok=await customConfirm(portfolio[i].ticker+' 종목을 삭제하시겠습니까?','삭제',true);if(!ok)return;delete priceData[portfolio[i].ticker];portfolio.splice(i,1);save();renderAll();}
-function save(){localStorage.setItem('pf_nat2',JSON.stringify(portfolio));markDirty();}
+function save(){localStorage.setItem('pf_nat2',JSON.stringify(portfolio));}
 
 // ════ 매수·추매 페이지 ════
 async function tradeLookup(){
@@ -2194,13 +1866,6 @@ async function tradeLookup(){
   const pr = price(t);
   document.getElementById('trade-curprice').value = pr ? '$'+pr.toFixed(2) : '—';
   document.getElementById('trade-name').value = priceData[t]?.name || st?.name || t;
-
-  // 섹터 자동완성
-  const detectedSector = priceData[t]?.sector || st?.sector || '';
-  const sectorSel = document.getElementById('trade-sector');
-  if(sectorSel && detectedSector){
-    sectorSel.value = detectedSector;
-  }
 
   const existing = portfolio.find(p=>p.ticker===t);
   const infoEl = document.getElementById('trade-existing-info');
@@ -2273,29 +1938,21 @@ async function tradeSave(){
   const addQty=buys.reduce((a,b)=>a+b.qty,0);
   const addAmt=buys.reduce((a,b)=>a+b.qty*b.price,0);
   const existing=portfolio.find(p=>p.ticker===t);
-  const selectedSector = document.getElementById('trade-sector')?.value || '';
-  const firstBuyDate = buys[0]?.date || new Date().toISOString().slice(0,10);
-
   if(existing){
     const newQty=existing.qty+addQty;
     const newCost=(existing.cost*existing.qty+addAmt)/newQty;
     existing.qty=newQty;
     existing.cost=newCost;
     existing.buys=[...(existing.buys||[]),...buys];
-    if(selectedSector && priceData[t]) priceData[t].sector = selectedSector;
   } else {
-    const sector = selectedSector || STATIC[t]?.sector || 'Other';
-    if(!priceData[t]) priceData[t]={price:SIM_P[t]||buys[0].price,name:STATIC[t]?.name||t,sector,divYield:STATIC[t]?.div||0};
-    else if(selectedSector) priceData[t].sector = selectedSector;
-    portfolio.push({ticker:t,qty:addQty,cost:addAmt/addQty,buys,sector});
-    await fetchAllPrices([t]);
+    if(!priceData[t]) priceData[t]={price:SIM_P[t]||buys[0].price,name:STATIC[t]?.name||t,sector:STATIC[t]?.sector||'Other',divYield:STATIC[t]?.div||0};
+    portfolio.push({ticker:t,qty:addQty,cost:addAmt/addQty,buys});
+    // GAS 실패해도 저장은 진행
+    try{ await fetchAllPrices([t]); }catch(e){ console.warn('가격 조회 실패, 저장은 완료:', e); }
   }
-
-  // USD 현금 자동 차감
-  cashAutoOut(t, addAmt, firstBuyDate);
-  saveCash(); renderCash();
-
-  save();renderAll();
+  // 저장 먼저 확실히
+  save();
+  renderAll();
   tradeReset();
   errEl.style.color='var(--sage-d)';
   errEl.textContent='✓ 포트폴리오에 반영되었습니다';
@@ -2313,7 +1970,6 @@ function tradeReset(){
   document.getElementById('trade-calc-total').textContent='$0.00';
   document.getElementById('trade-calc-new-avg').textContent='$0.00';
   document.getElementById('trade-err').textContent='';
-  const ss=document.getElementById('trade-sector'); if(ss) ss.value='';
   tradeAddRow();
 }
 
@@ -2410,8 +2066,7 @@ async function sellConfirm(){
   // 이력 기록
   const pnl=sellQty*(sellPx-p.cost);
   const ret=p.cost>0?(sellPx-p.cost)/p.cost*100:0;
-  const sellTotal = sellQty * sellPx;
-  sellHistory.unshift({date:sellDate,ticker:t,qty:sellQty,price:sellPx,total:sellTotal,cost:p.cost,pnl,ret});
+  sellHistory.unshift({date:sellDate,ticker:t,qty:sellQty,price:sellPx,total:sellQty*sellPx,cost:p.cost,pnl,ret});
   localStorage.setItem('sell_history',JSON.stringify(sellHistory));
   // 포트폴리오 수정
   const remain=+(p.qty-sellQty).toFixed(8);
@@ -2421,10 +2076,6 @@ async function sellConfirm(){
   } else {
     portfolio[idx].qty=remain;
   }
-  // USD 현금 자동 추가
-  cashAutoIn(t, sellTotal, sellDate);
-  saveCash(); renderCash();
-
   save();renderAll();renderSellPage();
   sellReset();
   errEl.style.color='var(--sage-d)';
@@ -2648,7 +2299,8 @@ async function saveBuyPanel(){
       };
     }
     portfolio.push({ticker, qty:totalQty, cost:avgCost, buys});
-    await fetchAllPrices([ticker]);
+    // GAS 실패해도 저장은 진행
+    try{ await fetchAllPrices([ticker]); }catch(e){ console.warn('가격 조회 실패, 저장은 완료:', e); }
   } else {
     // 수정
     portfolio[panelIdx].qty = totalQty;
@@ -2698,139 +2350,6 @@ async function confirmAdd(){
   btn.textContent='추가하기';btn.disabled=false;
 }
 
-// ════ GOOGLE DRIVE 동기화 ════
-let _syncTimer = null;
-let _lastSavedAt = null;
-let _syncDirty = false;
-
-function setSyncStatus(state, msg, time){
-  const dot = document.getElementById('sync-dot');
-  const lbl = document.getElementById('sync-label');
-  const tm  = document.getElementById('sync-time');
-  if(!dot) return;
-  dot.className = 'sync-status-dot ' + (state||'');
-  if(lbl) lbl.textContent = msg||'';
-  if(tm && time) tm.textContent = time;
-}
-
-// ── Drive에 저장 (GET 방식 — CORS 우회) ──
-async function driveSave(manual=false){
-  setSyncStatus('saving','저장 중...','');
-  try{
-    const data = {
-      portfolio,
-      cashData,
-      cashLedger,
-      sellHistory,
-      goalKRW,
-      finnhubKey,
-      ytdKeys: {},
-      savedAt: new Date().toISOString(),
-    };
-    for(let k in localStorage){
-      if(k.startsWith('ytd_base_')) data.ytdKeys[k] = JSON.parse(localStorage.getItem(k)||'null');
-    }
-
-    const encoded = encodeURIComponent(JSON.stringify(data));
-    const r = await fetch(`${GAS_URL}?type=save&data=${encoded}`);
-    const result = await r.json();
-
-    if(!result.ok) throw new Error('저장 응답 오류');
-
-    _lastSavedAt = new Date();
-    _syncDirty = false;
-    const timeStr = _lastSavedAt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
-    setSyncStatus('synced', manual?'저장 완료':'자동 저장됨', '마지막: '+timeStr);
-    if(manual) showToast('☁️ Google Drive에 저장되었습니다');
-
-  } catch(e){
-    setSyncStatus('error','저장 실패','');
-    if(manual) showToast('❌ 저장 실패: '+e.message, true);
-    console.warn('Drive save error:', e);
-  }
-}
-
-// ── Drive에서 불러오기 ──
-async function driveLoad(manual=false){
-  setSyncStatus('saving','불러오는 중...','');
-  try{
-    const r = await fetch(`${GAS_URL}?type=load`);
-    const d = await r.json();
-
-    if(!d.ok || !d.data){
-      setSyncStatus('', manual?'저장된 데이터 없음':'대기 중','');
-      if(manual) showToast('☁️ Drive에 저장된 데이터가 없습니다');
-      return false;
-    }
-
-    const data = d.data;
-
-    // 확인 (수동 불러오기 시만)
-    if(manual && portfolio.length > 0){
-      const ok = await customConfirm(
-        'Drive에서 불러오면 현재 데이터가 덮어씌워집니다.\n계속하시겠습니까?',
-        '불러오기', false
-      );
-      if(!ok){ setSyncStatus('synced','동기화됨',''); return false; }
-    }
-
-    // 데이터 복원
-    if(data.portfolio)    { portfolio = data.portfolio; localStorage.setItem('pf_nat2', JSON.stringify(portfolio)); }
-    if(data.cashData)     { cashData  = data.cashData;  localStorage.setItem('cash_nat2', JSON.stringify(cashData)); }
-    if(data.cashLedger)   { cashLedger = data.cashLedger; localStorage.setItem('cash_ledger', JSON.stringify(cashLedger)); }
-    if(data.sellHistory)  { sellHistory = data.sellHistory; localStorage.setItem('sell_history', JSON.stringify(sellHistory)); }
-    if(data.goalKRW)      { goalKRW = data.goalKRW; localStorage.setItem('goal_krw', String(goalKRW)); }
-    if(data.finnhubKey)   { finnhubKey = data.finnhubKey; localStorage.setItem('finnhub_key', finnhubKey); const kEl=document.getElementById('finnhub-key'); if(kEl) kEl.value=finnhubKey; }
-    if(data.ytdKeys){
-      for(let k in data.ytdKeys){
-        if(data.ytdKeys[k]) localStorage.setItem(k, JSON.stringify(data.ytdKeys[k]));
-      }
-    }
-
-    // 포트폴리오 초기화 (priceData 재구성)
-    portfolio.forEach(p=>{
-      if(!p.buys||!p.buys.length) p.buys = p.qty&&p.cost?[{date:'',qty:p.qty,price:p.cost}]:[];
-      priceData[p.ticker]={price:SIM_P[p.ticker]||p.cost||100,name:STATIC[p.ticker]?.name||p.ticker,sector:STATIC[p.ticker]?.sector||'Other',divYield:STATIC[p.ticker]?.div||0};
-    });
-
-    loadCashInputs();
-
-    const savedAt = data.savedAt ? new Date(data.savedAt).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
-    setSyncStatus('synced','동기화됨', savedAt ? '저장일: '+savedAt : '');
-    _lastSavedAt = new Date();
-
-    renderAll();
-    if(manual) showToast('☁️ Drive에서 불러왔습니다');
-    return true;
-
-  } catch(e){
-    setSyncStatus('error','불러오기 실패','');
-    if(manual) showToast('❌ 불러오기 실패: '+e.message, true);
-    console.warn('Drive load error:', e);
-    return false;
-  }
-}
-
-// ── 변경 감지 → 자동 저장 예약 ──
-function markDirty(){
-  _syncDirty = true;
-  setSyncStatus('saving','변경됨 (저장 대기)','');
-  clearTimeout(_syncTimer);
-  _syncTimer = setTimeout(()=>{ if(_syncDirty) driveSave(false); }, 30000); // 30초 후 자동 저장
-}
-
-// ── 토스트 메시지 ──
-function showToast(msg, isErr=false){
-  const t = document.createElement('div');
-  t.textContent = msg;
-  t.style.cssText = `position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
-    background:${isErr?'var(--red)':'#2c4a6e'};color:#fff;padding:10px 24px;
-    border-radius:24px;font-size:13px;font-family:'DM Sans',sans-serif;
-    z-index:999;box-shadow:0 4px 16px rgba(0,0,0,0.2);white-space:nowrap`;
-  document.body.appendChild(t);
-  setTimeout(()=>t.remove(), 3000);
-}
-
 // ════ INIT ════
 portfolio.forEach(p=>{
   // buys 필드 없으면 마이그레이션
@@ -2850,21 +2369,8 @@ renderAll();
 document.getElementById('sb-usdkrw').textContent='₩'+usdkrw.toLocaleString('ko-KR',{maximumFractionDigits:1});
 document.getElementById('fx-source').textContent='환율 조회 중...';
 document.getElementById('update-info').textContent='초기화 완료';
-
-// ── 앱 시작 시 Drive에서 자동 불러오기 ──
-(async()=>{
-  setSyncStatus('saving','Drive 확인 중...','');
-  const loaded = await driveLoad(false);
-  if(!loaded){
-    setSyncStatus('','로컬 데이터 사용','');
-  }
-  // 이후 주가·환율 새로고침
-  await refreshAll();
-})();
-
-// 5분마다 자동 저장
-setInterval(()=>{ if(_syncDirty) driveSave(false); }, 5*60*1000);
-setInterval(refreshAll, 60000);
+refreshAll();
+setInterval(refreshAll,60000);
 </script>
 </body>
 </html>
