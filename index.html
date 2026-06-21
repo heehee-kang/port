@@ -1738,7 +1738,13 @@ let portfolio = JSON.parse(localStorage.getItem('pf_nat2')||'null')||[];
 let cashData = JSON.parse(localStorage.getItem('cash_nat2')||'null')||{usd:0,krw:0,other:0,intUsd:0,intKrw:0,intOther:0};
 let priceData = {};
 
-function simP(t){return +(((SIM_P[t]||100)*(1+(Math.random()-0.5)*0.002)).toFixed(2));}
+function simP(t){
+  if(!priceData[t]) priceData[t]={};
+  if(priceData[t].simPrice==null){
+    priceData[t].simPrice = +(((SIM_P[t]||100)*(1+(Math.random()-0.5)*0.002)).toFixed(2));
+  }
+  return priceData[t].simPrice;
+}
 function price(t){return priceData[t]?.price||simP(t);}
 function isSimPrice(t){return !priceData[t]?.price;}
 function sec(t){return priceData[t]?.sector||STATIC[t]?.sector||'Other';}
@@ -1962,7 +1968,10 @@ async function refreshAll(){
   autoManageYtd();
 
   renderAll();
-
+if(!localStorage.getItem('snap_reset_v1')){
+  localStorage.removeItem('asset_snapshots');
+  localStorage.setItem('snap_reset_v1','1');
+}
   // 실시간 가격 기준으로 자산 스냅샷 저장
   if(portfolio.length > 0){
     let totS=0; portfolio.forEach(p=>{totS+=price(p.ticker)*p.qty*usdkrw;});
